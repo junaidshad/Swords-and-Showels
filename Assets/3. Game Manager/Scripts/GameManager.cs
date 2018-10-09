@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
-[System.Serializable] public class EventGameState: UnityEvent<GameManager.GameState, GameManager.GameState>{    }
 
 public class GameManager : Singleton<GameManager> {
     // keep track of the game state
@@ -18,7 +17,7 @@ public class GameManager : Singleton<GameManager> {
     }
     
     public GameObject[] SystemPrefabs;
-    public EventGameState OnGameStateChanged;
+    public Events.EventGameState OnGameStateChanged;
 
     private List<GameObject> _instancedSystemPrefabs = new List<GameObject>();
 
@@ -37,8 +36,18 @@ public class GameManager : Singleton<GameManager> {
         _loadOperations = new List<AsyncOperation>();
 
         InstantiateSystemPrefabs();
-
+        UIManager.Instance.OnMainMenuFadeComplete.AddListener(HandleMainMenuFadeComplete);
     }
+
+    void Update(){
+		if(_currentGameState == GameManager.GameState.PREGAME){
+			return;
+		}
+
+		if(Input.GetKeyDown(KeyCode.Escape)){
+			TogglePause();
+		}
+	}
 
     void OnLoadOperationComplete(AsyncOperation ao)
     {
@@ -56,19 +65,26 @@ public class GameManager : Singleton<GameManager> {
         Debug.Log("Unloading Complete");
     }
 
+    void HandleMainMenuFadeComplete(bool fadeOut){
+        if(!fadeOut){
+            UnloadLevel(_currentLevelName);
+        }
+        
+    }
+
     void UpdateState(GameState state){
         GameState previousGameState = _currentGameState;
         _currentGameState = state;
 
         switch(state){
             case GameState.PREGAME:{
-
+                Time.timeScale = 1f;
             }break;
             case GameState.RUNNING:{
-
+                Time.timeScale = 1f;
             }break;
             case GameState.PAUSED:{
-
+                Time.timeScale = 0f;
             }break;
             default:{
 
@@ -118,5 +134,18 @@ public class GameManager : Singleton<GameManager> {
 
     public void StartGame(){
         LoadLevel("Main");
+    }
+
+    public void TogglePause(){
+        UpdateState(_currentGameState == GameState.RUNNING ? GameState.PAUSED : GameState.RUNNING);
+    }
+
+    public void RestartGame(){
+        UpdateState(GameState.PREGAME);
+    }
+    public void QuitGame(){
+        // implement features for quitting.
+
+        Application.Quit();
     }
 }
