@@ -1,18 +1,35 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+
+[System.Serializable] public class EventGameState: UnityEvent<GameManager.GameState, GameManager.GameState>{    }
 
 public class GameManager : Singleton<GameManager> {
     // keep track of the game state
+
+    // PREGAME, RUNNING, PAUSE
+
+    public enum GameState{
+        PREGAME,
+        RUNNING,
+        PAUSED
+    }
     
     public GameObject[] SystemPrefabs;
+    public EventGameState OnGameStateChanged;
 
     private List<GameObject> _instancedSystemPrefabs = new List<GameObject>();
 
     private string _currentLevelName = string.Empty;
 
     List<AsyncOperation> _loadOperations;
+    GameState _currentGameState = GameState.PREGAME;
+    public GameState CurrentGameState{
+        get{return _currentGameState;}
+        private set{_currentGameState = value;}
+    }
 
     void Start()
     {
@@ -21,21 +38,45 @@ public class GameManager : Singleton<GameManager> {
 
         InstantiateSystemPrefabs();
 
-        LoadLevel("Main");
     }
 
     void OnLoadOperationComplete(AsyncOperation ao)
     {
         if(_loadOperations.Contains(ao)){
             _loadOperations.Remove(ao);
-            // dispatch message
-            // transition between scenes
+
+            if(_loadOperations.Count == 0){
+                UpdateState(GameState.RUNNING);
+            }
         }
         Debug.Log("Loading Complete");
     }
     void OnUnloadOperationComplete(AsyncOperation ao)
     {
         Debug.Log("Unloading Complete");
+    }
+
+    void UpdateState(GameState state){
+        GameState previousGameState = _currentGameState;
+        _currentGameState = state;
+
+        switch(state){
+            case GameState.PREGAME:{
+
+            }break;
+            case GameState.RUNNING:{
+
+            }break;
+            case GameState.PAUSED:{
+
+            }break;
+            default:{
+
+            }break;
+        }
+        OnGameStateChanged.Invoke(_currentGameState, previousGameState);
+            // dispatch message
+            // transition between scenes
     }
 
     void InstantiateSystemPrefabs(){
@@ -73,5 +114,9 @@ public class GameManager : Singleton<GameManager> {
         }
         _instancedSystemPrefabs.Clear();
 
+    }
+
+    public void StartGame(){
+        LoadLevel("Main");
     }
 }

@@ -6,8 +6,12 @@ public class UIManager : Singleton<UIManager> {
 	[SerializeField] MainMenu _mainMenu;
 	[SerializeField] Camera _dummyCamera;
 	void Update(){
+		if(GameManager.Instance.CurrentGameState != GameManager.GameState.PREGAME){
+			return;
+		}
+
 		if(Input.GetKeyDown(KeyCode.Space)){
-			_mainMenu.FadeOut();
+			GameManager.Instance.StartGame();
 		}
 	}
 
